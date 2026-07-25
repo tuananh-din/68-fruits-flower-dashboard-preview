@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>68 Ads Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322272f'/%3E%3Cpath d='M8 17h16v7H8z' fill='%23f97316'/%3E%3Cpath d='M8 8h16v7H8z' fill='%234f7df3'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="static/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <header class="dashboard-header">
+      <div>
+        <h1>DASHBOARD</h1>
+        <p>Meta Ads -> tin nhắn -> doanh thu cửa hàng</p>
+      </div>
+      <div class="source-badge" aria-label="Nguồn dữ liệu dashboard">
+        <span class="source-mark"></span>
+        <span>Client preview snapshot</span>
+      </div>
+    </header>
+    <main class="dashboard-shell">
+      <section class="control-panel" aria-label="Bộ lọc dashboard">
+        <label>Từ ngày <input id="date-from" type="date"></label>
+        <label>Đến ngày <input id="date-to" type="date"></label>
+        <button id="refresh" type="button">Cập nhật</button>
+        <span class="period-note" id="period-note"></span>
+      </section>
+      <section id="kpis" class="kpi-grid" aria-label="Chỉ số tổng quan"></section>
+      <section id="join-note" class="scope-note"></section>
+
+      <section class="chart-grid top-row">
+        <article class="chart-card">
+          <div class="card-heading">
+            <h2>Doanh thu & chi tiêu theo quý</h2>
+            <p>Revenue bar, spend line</p>
+          </div>
+          <canvas id="quarterly-combo-chart" aria-label="Doanh thu và chi tiêu theo quý"></canvas>
+        </article>
+        <article class="chart-card">
+          <div class="card-heading">
+            <h2>Cost/Mes theo tháng</h2>
+            <p>Messages cost trend</p>
+          </div>
+          <canvas id="monthly-cost-chart" aria-label="Cost per message theo tháng"></canvas>
+        </article>
+        <article class="chart-card">
+          <div class="card-heading">
+            <h2>Mess & Cost/Mes theo sản phẩm</h2>
+            <p>Volume bar, quality line</p>
+          </div>
+          <canvas id="product-message-chart" aria-label="Tin nhắn và cost per message theo sản phẩm"></canvas>
+        </article>
+      </section>
+
+      <section class="chart-grid wide-row">
+        <article class="chart-card">
+          <div class="card-heading">
+            <h2>%CIR & Doanh thu S.I</h2>
+            <p>Revenue bar, CIR line when confirmed</p>
+          </div>
+          <canvas id="monthly-cir-chart" aria-label="CIR và doanh thu theo tháng"></canvas>
+        </article>
+        <article class="chart-card">
+          <div class="card-heading">
+            <h2>Cost/Mes & Doanh thu S.I</h2>
+            <p>Revenue bar, cost/message line</p>
+          </div>
+          <canvas id="monthly-revenue-cost-chart" aria-label="Cost per message và doanh thu theo tháng"></canvas>
+        </article>
+      </section>
+
+      <section id="weekly-section" class="weekly-review hidden">
+        <article class="chart-card">
+          <div class="card-heading">
+            <h2>Mess & Cost/Mes theo tuần</h2>
+            <p>Chủ nhật -> Chủ nhật kế tiếp</p>
+          </div>
+          <canvas id="weekly-review-chart" aria-label="Tin nhắn và cost per message theo tuần"></canvas>
+        </article>
+        <article class="data-card">
+          <h2>Weekly KPI</h2>
+          <div id="weekly-table" class="table-wrap"></div>
+        </article>
+      </section>
+
+      <section class="table-grid">
+        <article class="data-card">
+          <h2>Theo tài khoản quảng cáo</h2>
+          <div id="account-table" class="table-wrap"></div>
+        </article>
+        <article class="data-card">
+          <h2>Theo sản phẩm</h2>
+          <div id="product-table" class="table-wrap"></div>
+        </article>
+      </section>
+      <section class="table-grid single">
+        <article class="data-card">
+          <h2>Top campaign theo chi tiêu</h2>
+          <div id="campaign-table" class="table-wrap"></div>
+        </article>
+      </section>
+      <section class="data-card quality-card">
+        <h2>Data Quality</h2>
+        <div id="quality" class="quality"></div>
+      </section>
+    </main>
+    <script src="static/static-data.js"></script>
+    <script src="static/dashboard.js"></script>
+  </body>
+</html>
