@@ -128,22 +128,22 @@ function renderCharts({ weekly, monthly, quarterly, product, weekday, monthWeek,
 
 function weekdayChart(rows) {
   return comboChart("weekday-chart", rows.map((row) => row.label), [
-    barDataset("Tin nhắn", rows.map((row) => row.messages), "#4f7df3", "y"),
-    lineDataset("Cost/message", rows.map((row) => row.cost_per_message), "#f97316", "y1"),
+    barDataset("Doanh thu", rows.map((row) => row.revenue), "#f84545", "y"),
+    lineDataset("%CIR", rows.map((row) => row.ad_cost_ratio), "#232a34", "y1"),
   ], {
-    y: { formatter: (value) => number.format(value), title: "Tin nhắn" },
-    y1: { formatter: shortMoney, title: "Cost/message" },
-  });
+    y: { formatter: shortMoney, title: "Doanh thu" },
+    y1: { formatter: (value) => `${percent.format(value * 100)}%`, title: "%CIR" },
+  }, { labels: true, labelFormatter: (value) => `${percent.format(value * 100)}%`, labelDataset: 1 });
 }
 
 function monthWeekChart(rows) {
   return comboChart("month-week-chart", rows.map((row) => `Tuần ${row.week_number}`), [
-    barDataset("Tin nhắn", rows.map((row) => row.messages), "#4f7df3", "y"),
-    lineDataset("Cost/message", rows.map((row) => row.cost_per_message), "#f97316", "y1"),
+    barDataset("Doanh thu", rows.map((row) => row.revenue), "#f84545", "y"),
+    lineDataset("%CIR", rows.map((row) => row.ad_cost_ratio), "#232a34", "y1"),
   ], {
-    y: { formatter: (value) => number.format(value), title: "Tin nhắn" },
-    y1: { formatter: shortMoney, title: "Cost/message" },
-  });
+    y: { formatter: shortMoney, title: "Doanh thu" },
+    y1: { formatter: (value) => `${percent.format(value * 100)}%`, title: "%CIR" },
+  }, { labels: true, labelFormatter: (value) => `${percent.format(value * 100)}%`, labelDataset: 1 });
 }
 
 function renderCalendarAnalysis(weekday, monthWeek) {
@@ -155,6 +155,7 @@ function renderCalendarAnalysis(weekday, monthWeek) {
     ["Doanh thu", (row) => moneyOrMissing(row.revenue)],
     ["Đơn", (row) => countOrMissing(row.order_count)],
     ["ROAS*", (row) => ratioOrMissing(row.roas)],
+    ["%CIR*", (row) => percentOrMissing(row.ad_cost_ratio)],
   ];
   renderTable("weekday-table", weekday, [["Thứ", (row) => row.label], ...commonColumns]);
   renderTable("month-week-table", monthWeek, [["Tuần", (row) => row.label], ["Tháng QS", (row) => number.format(row.observed_months)], ...commonColumns]);
