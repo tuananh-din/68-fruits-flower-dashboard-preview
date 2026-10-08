@@ -46,7 +46,7 @@ async function loadDashboard() {
   if (from) qs.set("date_from", from);
   if (to) qs.set("date_to", to);
   renderPeriodNote(from, to);
-  const [summary, weekly, monthly, quarterly, product, accounts, campaigns, quality] = await Promise.all([
+  const [summary, weekly, monthly, quarterly, product, accounts, campaigns, weekday, monthWeek, quality] = await Promise.all([
     getJson(`/api/summary?${qs}`),
     getJson(`/api/weekly-performance?${qs}`),
     getJson(`/api/monthly-performance?${qs}`),
@@ -54,11 +54,14 @@ async function loadDashboard() {
     getJson(`/api/product-performance?${qs}`),
     getJson(`/api/account-performance?${qs}`),
     getJson(`/api/campaign-performance?${qs}`),
+    getJson(`/api/weekday-performance?${qs}`),
+    getJson(`/api/month-week-performance?${qs}`),
     getJson("/api/data-quality"),
   ]);
   renderKpis(summary);
   renderJoinNote(summary);
-  renderCharts({ weekly, monthly, quarterly, product, summary, from, to });
+  renderCharts({ weekly, monthly, quarterly, product, weekday, monthWeek, summary, from, to });
+  renderCalendarAnalysis(weekday, monthWeek);
   renderAccountTable(accounts);
   renderProductTable(product);
   renderCampaignTable(campaigns);
@@ -109,7 +112,7 @@ function renderJoinNote(data) {
   target.className = "scope-note";
 }
 
-function renderCharts({ weekly, monthly, quarterly, product, summary, from, to }) {
+function renderCharts({ weekly, monthly, quarterly, product, weekday, monthWeek, summary, from, to }) {
   destroyCharts();
   charts = [
     quarterlyComboChart(quarterly),
@@ -117,8 +120,44 @@ function renderCharts({ weekly, monthly, quarterly, product, summary, from, to }
     productEfficiencyChart(product),
     monthlyCirChart(monthly, Boolean(summary.ad_cost_ratio)),
     monthlyRevenueCostChart(monthly),
+    weekdayChart(weekday),
+    monthWeekChart(monthWeek),
   ];
   renderWeeklyReview(weekly, from, to);
+}
+
+function weekdayChart(rows) {
+  return comboChart("weekday-chart", rows.map((row) => row.label), [
+    barDataset("Tin nhắn", rows.map((row) => row.messages), "#4f7df3", "y"),
+    lineDataset("Cost/message", rows.map((row) => row.cost_per_message), "#f97316", "y1"),
+  ], {
+    y: { formatter: (value) => number.format(value), title: "Tin nhắn" },
+    y1: { formatter: shortMoney, title: "Cost/message" },
+  });
+}
+
+function monthWeekChart(rows) {
+  return comboChart("month-week-chart", rows.map((row) => `Tuần ${row.week_number}`), [
+    barDataset("Tin nhắn", rows.map((row) => row.messages), "#4f7df3", "y"),
+    lineDataset("Cost/message", rows.map((row) => row.cost_per_message), "#f97316", "y1"),
+  ], {
+    y: { formatter: (value) => number.format(value), title: "Tin nhắn" },
+    y1: { formatter: shortMoney, title: "Cost/message" },
+  });
+}
+
+function renderCalendarAnalysis(weekday, monthWeek) {
+  const commonColumns = [
+    ["Ngày QS", (row) => number.format(row.observed_days)],
+    ["Chi phí", (row) => moneyOrMissing(row.spend)],
+    ["Tin nhắn", (row) => countOrMissing(row.messages)],
+    ["Cost/message", (row) => moneyOrMissing(row.cost_per_message)],
+    ["Doanh thu", (row) => moneyOrMissing(row.revenue)],
+    ["Đơn", (row) => countOrMissing(row.order_count)],
+    ["ROAS*", (row) => ratioOrMissing(row.roas)],
+  ];
+  renderTable("weekday-table", weekday, [["Thứ", (row) => row.label], ...commonColumns]);
+  renderTable("month-week-table", monthWeek, [["Tuần", (row) => row.label], ["Tháng QS", (row) => number.format(row.observed_months)], ...commonColumns]);
 }
 
 function destroyCharts() {

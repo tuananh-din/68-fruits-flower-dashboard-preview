@@ -166,6 +166,44 @@ window.STATIC_DATA = {"meta": {"date_from": "2026-01-01", "date_to": "2026-07-25
     }).sort((a, b) => b.spend - a.spend).slice(0, 20);
   }
 
+  function calendarPerformance(from, to, mode) {
+    const labels = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+    const byPeriod = new Map();
+    const add = (value, kind, row) => {
+      const date = new Date(`${value}T00:00:00Z`);
+      const weekNumber = Math.floor((date.getUTCDate() - 1) / 7) + 1;
+      const key = mode === "weekday" ? String(date.getUTCDay()) : String(weekNumber);
+      const current = byPeriod.get(key) || { ads: [], revenue: [], dates: new Set(), months: new Set() };
+      current[kind].push(row);
+      current.dates.add(value);
+      current.months.add(value.slice(0, 7));
+      byPeriod.set(key, current);
+    };
+    filtered(data.insights, "date", from, to).forEach((row) => add(row.date, "ads", row));
+    filtered(data.revenue, "revenue_date", from, to).forEach((row) => add(row.revenue_date, "revenue", row));
+    return [...byPeriod.entries()].sort(([a], [b]) => Number(a) - Number(b)).map(([key, item]) => {
+      const spend = item.ads.length ? sum(item.ads, "spend") : null;
+      const messages = item.ads.length ? sum(item.ads, "messages") : null;
+      const revenue = aggregateRevenue(item.revenue);
+      const weekNumber = Number(key);
+      return {
+        ...(mode === "weekday"
+          ? { weekday_index: weekNumber, label: labels[weekNumber] }
+          : { week_number: weekNumber, label: `Tuần ${weekNumber} (${(weekNumber - 1) * 7 + 1}–${weekNumber === 5 ? 31 : weekNumber * 7})` }),
+        observed_days: item.dates.size,
+        observed_months: item.months.size,
+        spend,
+        messages,
+        cost_per_message: safeDivide(spend, messages),
+        revenue: revenue.revenue,
+        order_count: revenue.order_count,
+        roas: safeDivide(revenue.revenue, spend),
+        ad_cost_ratio: safeDivide(spend, revenue.revenue),
+        revenue_join_status: revenueStatus(),
+      };
+    });
+  }
+
   window.staticGetJson = (path) => {
     const url = new URL(path, window.location.origin);
     const from = url.searchParams.get("date_from");
@@ -179,6 +217,8 @@ window.STATIC_DATA = {"meta": {"date_from": "2026-01-01", "date_to": "2026-07-25
       "/api/product-performance": () => productPerformance(from, to),
       "/api/account-performance": () => accountPerformance(from, to),
       "/api/campaign-performance": () => campaignPerformance(from, to),
+      "/api/weekday-performance": () => calendarPerformance(from, to, "weekday"),
+      "/api/month-week-performance": () => calendarPerformance(from, to, "monthWeek"),
       "/api/accounts": () => data.accounts,
       "/api/campaigns": () => data.campaigns,
       "/api/data-quality": () => data.quality,
